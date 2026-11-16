@@ -1,0 +1,26 @@
+
+# Environment dan file rahasia
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+
+# Dependencies frontend
+node_modules
+
+# File testing dan development
+tests
+.phpunit.cache
+.phpunit.result.cache
+
+# Editor dan sistem operasi
+.idea
+.vscode
+.DS_Store
+Thumbs.db
+
+# Log lokal
+*.log
