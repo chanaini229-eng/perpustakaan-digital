@@ -86,8 +86,8 @@
                     {{-- Siswa --}}
                     @role('siswa')
                         <x-nav-link
-                            :href="route('siswa.dashboard')"
-                            :active="request()->routeIs('siswa.dashboard')">
+                            :href="route('buku.index')"
+                            :active="request()->routeIs('buku.index')">
                             Dashboard Siswa
                         </x-nav-link>
                     @endrole
@@ -215,6 +215,7 @@
 
         <div class="space-y-1 px-4 py-3">
 
+            {{-- Admin --}}
             @role('admin')
                 <x-responsive-nav-link
                     :href="route('admin.dashboard')"
@@ -239,6 +240,7 @@
                 @endcan
             @endrole
 
+            {{-- Petugas --}}
             @role('petugas')
                 <x-responsive-nav-link
                     :href="route('petugas.dashboard')"
@@ -247,14 +249,16 @@
                 </x-responsive-nav-link>
             @endrole
 
+            {{-- Siswa --}}
             @role('siswa')
                 <x-responsive-nav-link
-                    :href="route('siswa.dashboard')"
-                    :active="request()->routeIs('siswa.dashboard')">
+                    :href="route('buku.index')"
+                    :active="request()->routeIs('buku.index')">
                     Dashboard Siswa
                 </x-responsive-nav-link>
             @endrole
 
+            {{-- Menu bersama --}}
             @can('kelola data anggota')
                 <x-responsive-nav-link
                     :href="route('petugas.anggota.index')"

@@ -3,12 +3,18 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+
 use App\Models\Buku;
+
+use App\Http\Controllers\BukuController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\PeminjamanController;
+use App\Http\Controllers\Admin\PengembalianController;
+use App\Http\Controllers\Admin\LaporanPeminjamanController;
 use App\Http\Controllers\Petugas\AnggotaController;
 use App\Http\Controllers\PeminjamanPribadiController;
+use App\Http\Controllers\Api\BukuController as ApiBukuController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,11 +28,12 @@ Route::get('/', function () {
 
 /*
 |--------------------------------------------------------------------------
-| Dashboard Berdasarkan Role
+| Dashboard Utama
 |--------------------------------------------------------------------------
 */
 
 Route::get('/dashboard', function () {
+
     $user = auth()->user();
 
     if ($user->hasRole('admin')) {
@@ -37,40 +44,31 @@ Route::get('/dashboard', function () {
         return redirect()->route('petugas.dashboard');
     }
 
-    if ($user->hasRole('siswa')) {
-        return redirect()->route('siswa.dashboard');
-    }
+    return redirect()->route('buku.index');
 
-    abort(403, 'Akun tidak memiliki role yang sesuai.');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 /*
 |--------------------------------------------------------------------------
-| Dashboard Admin
+| Dashboard Admin dan Petugas
 |--------------------------------------------------------------------------
 */
 
-Route::get('/admin/dashboard', function () {
-    return view('admin.dashboard');
-})->middleware([
-    'auth',
-    'verified',
-    'permission:akses dashboard admin',
-])->name('admin.dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
 
-/*
-|--------------------------------------------------------------------------
-| Dashboard Siswa
-|--------------------------------------------------------------------------
-*/
+    // Dashboard Admin
+    Route::get('/admin/dashboard', function () {
+        return view('admin.dashboard');
+    })->middleware('role:admin')
+      ->name('admin.dashboard');
 
-Route::get('/siswa/dashboard', function () {
-    return view('siswa.dashboard');
-})->middleware([
-    'auth',
-    'verified',
-    'role:siswa',
-])->name('siswa.dashboard');
+    // Dashboard Petugas
+    Route::get('/petugas/dashboard', function () {
+        return view('petugas.dashboard');
+    })->middleware('role:petugas')
+      ->name('petugas.dashboard');
+
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -81,194 +79,43 @@ Route::get('/siswa/dashboard', function () {
 Route::middleware([
     'auth',
     'verified',
-    'permission:kelola data pengguna',
+    'role:admin',
 ])->prefix('admin')->name('admin.')->group(function () {
+
     Route::resource('users', UserController::class);
+
 });
 
 /*
 |--------------------------------------------------------------------------
-| Laporan Perpustakaan
+| Pengelolaan Buku
 |--------------------------------------------------------------------------
 */
 
-Route::get('/admin/laporan-peminjaman', function () {
-    return view('admin.laporan-peminjaman');
-})->middleware([
-    'auth',
-    'verified',
-    'permission:lihat laporan perpustakaan',
-])->name('admin.laporan-peminjaman');
+Route::get('/buku', [BukuController::class, 'index'])
+    ->middleware([
+        'auth',
+        'verified',
+        'permission:lihat daftar buku',
+    ])
+    ->name('buku.index');
+
+Route::resource('buku', BukuController::class)
+    ->except(['index', 'show'])
+    ->middleware([
+        'auth',
+        'verified',
+        'can:kelola-buku',
+    ]);
 
 /*
 |--------------------------------------------------------------------------
-| Peminjaman dan Pengembalian oleh Admin/Petugas
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware(['auth', 'verified'])
-    ->prefix('admin')
-    ->name('admin.')
-    ->group(function () {
-
-        Route::get('/peminjaman', [
-            PeminjamanController::class,
-            'index',
-        ])->middleware('permission:kelola peminjaman')
-          ->name('peminjaman.index');
-
-        Route::post('/peminjaman/{id}/setujui', [
-            PeminjamanController::class,
-            'setujui',
-        ])->middleware('permission:memproses persetujuan peminjaman')
-          ->name('peminjaman.setujui');
-
-        Route::post('/peminjaman/{id}/tolak', [
-            PeminjamanController::class,
-            'tolak',
-        ])->middleware('permission:memproses persetujuan peminjaman')
-          ->name('peminjaman.tolak');
-
-        Route::get('/pengembalian', [
-            PeminjamanController::class,
-            'pengembalian',
-        ])->middleware('permission:kelola pengembalian')
-          ->name('pengembalian.index');
-
-        Route::post('/pengembalian/{id}/proses', [
-            PeminjamanController::class,
-            'prosesPengembalian',
-        ])->middleware('permission:kelola pengembalian')
-          ->name('pengembalian.proses');
-    });
-
-/*
-|--------------------------------------------------------------------------
-| Dashboard Petugas
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/petugas/dashboard', function () {
-    return view('petugas.dashboard');
-})->middleware([
-    'auth',
-    'verified',
-    'permission:akses dashboard petugas',
-])->name('petugas.dashboard');
-
-/*
-|--------------------------------------------------------------------------
-| Data Anggota oleh Petugas
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware([
-    'auth',
-    'verified',
-    'permission:kelola data anggota',
-])->prefix('petugas')->name('petugas.')->group(function () {
-    Route::resource('anggota', AnggotaController::class);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Daftar Buku
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/buku', function () {
-    $bukus = Buku::with('kategori')
-        ->latest()
-        ->get();
-
-    return view('buku.index', compact('bukus'));
-})->middleware([
-    'auth',
-    'verified',
-    'permission:lihat daftar buku',
-])->name('buku.index');
-
-/*
-|--------------------------------------------------------------------------
-| Peminjaman Pribadi Siswa
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware([
-    'auth',
-    'verified',
-])->prefix('peminjaman-saya')->name('peminjaman.saya.')->group(function () {
-
-    Route::get('/ajukan', [
-        PeminjamanPribadiController::class,
-        'create',
-    ])->middleware('permission:mengajukan peminjaman buku')
-      ->name('create');
-
-    Route::post('/ajukan', [
-        PeminjamanPribadiController::class,
-        'store',
-    ])->middleware('permission:mengajukan peminjaman buku')
-      ->name('store');
-
-    Route::get('/status', [
-        PeminjamanPribadiController::class,
-        'status',
-    ])->middleware('permission:melihat status peminjaman sendiri')
-      ->name('status');
-
-    Route::get('/riwayat', [
-        PeminjamanPribadiController::class,
-        'riwayat',
-    ])->middleware('permission:melihat riwayat peminjaman sendiri')
-      ->name('riwayat');
-});
-
-/*
-|--------------------------------------------------------------------------
-| Profil Pengguna
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware(['auth', 'verified'])->group(function () {
-
-    Route::get('/profile', [
-        ProfileController::class,
-        'edit',
-    ])->middleware('permission:lihat profil sendiri')
-      ->name('profile.edit');
-
-    Route::patch('/profile', [
-        ProfileController::class,
-        'update',
-    ])->middleware('permission:ubah profil sendiri')
-      ->name('profile.update');
-
-    Route::delete('/profile', [
-        ProfileController::class,
-        'destroy',
-    ])->name('profile.destroy');
-});
-
-/*
-|--------------------------------------------------------------------------
-| Tes Halaman
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/tes-halaman', function () {
-    return response(
-        '<h1 style="color:blue">LARAVEL BERHASIL MENAMPILKAN HALAMAN</h1>'
-    );
-});
-
-/*
-|--------------------------------------------------------------------------
-| Pengujian SQL Injection (A2) - Sudah Diperbaiki
+| Pencarian Buku
 |--------------------------------------------------------------------------
 */
 
 Route::get('/buku-cari', function () {
+
     $judul = request()->query('judul');
 
     $hasil = DB::select(
@@ -277,39 +124,36 @@ Route::get('/buku-cari', function () {
     );
 
     return response()->json($hasil);
+
 })->middleware('auth');
 
 /*
 |--------------------------------------------------------------------------
-| Pengujian CSRF (A3) - Sudah Diperbaiki
+| Penghapusan Buku
 |--------------------------------------------------------------------------
 */
 
-Route::delete('/buku/{buku}/hapus', function (string $buku) {
-    return app(\App\Http\Controllers\Api\BukuController::class)
-        ->destroy($buku);
-})->middleware('auth');
+Route::delete('/buku/{buku}/hapus', [
+    ApiBukuController::class,
+    'destroy'
+])->middleware([
+    'auth',
+    'can:kelola-buku',
+])->name('buku.hapus');
 
 /*
 |--------------------------------------------------------------------------
-| Halaman Pengujian Penghapusan Buku
-|--------------------------------------------------------------------------
-*/
-
-
-/*
-|--------------------------------------------------------------------------
-| Pengujian IDOR (A4) - Sudah Diperbaiki dengan Policy
+| Detail Peminjaman
 |--------------------------------------------------------------------------
 */
 
 Route::get('/peminjaman/{id}', function (string $id) {
+
     $peminjaman = \App\Models\Peminjaman::with([
         'anggota',
         'buku'
     ])->findOrFail($id);
 
-    // Memeriksa apakah pengguna berhak melihat peminjaman ini.
     Gate::authorize('view', $peminjaman);
 
     return response()->json([
@@ -320,14 +164,143 @@ Route::get('/peminjaman/{id}', function (string $id) {
         'tanggal_kembali' => $peminjaman->tanggal_kembali,
         'status' => $peminjaman->status,
     ]);
+
 })->middleware('auth');
 
 /*
 |--------------------------------------------------------------------------
-| Autentikasi Laravel Breeze
+| Peminjaman Pribadi oleh Siswa
 |--------------------------------------------------------------------------
 */
 
+Route::middleware([
+    'auth',
+    'verified',
+])->prefix('peminjaman-saya')->name('peminjaman.saya.')->group(function () {
 
+    Route::get('/ajukan', [
+        PeminjamanPribadiController::class,
+        'create'
+    ])->middleware('permission:mengajukan peminjaman buku')
+      ->name('create');
+
+    Route::post('/ajukan', [
+        PeminjamanPribadiController::class,
+        'store'
+    ])->middleware('permission:mengajukan peminjaman buku')
+      ->name('store');
+
+    Route::get('/status', [
+        PeminjamanPribadiController::class,
+        'status'
+    ])->middleware('permission:melihat status peminjaman sendiri')
+      ->name('status');
+
+    Route::get('/riwayat', [
+        PeminjamanPribadiController::class,
+        'riwayat'
+    ])->middleware('permission:melihat riwayat peminjaman sendiri')
+      ->name('riwayat');
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Pengelolaan Peminjaman, Pengembalian, dan Laporan
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+    'role:admin',
+])->prefix('admin')->name('admin.')->group(function () {
+
+    Route::resource(
+        'peminjaman',
+        PeminjamanController::class
+    );
+
+    Route::resource(
+        'pengembalian',
+        PengembalianController::class
+    )->only(['index', 'update']);
+
+    Route::get(
+        '/laporan-peminjaman',
+        [LaporanPeminjamanController::class, 'index']
+    )->name('laporan-peminjaman');
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Pengelolaan Anggota oleh Petugas
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware([
+    'auth',
+    'verified',
+    'role:petugas',
+])->prefix('petugas')->name('petugas.')->group(function () {
+
+    Route::resource(
+        'anggota',
+        AnggotaController::class
+    );
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Pengujian CSRF
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/uji-csrf', function () {
+    return view('uji-csrf');
+})->middleware('auth');
+
+/*
+|--------------------------------------------------------------------------
+| Profil Pengguna
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth')->group(function () {
+
+    Route::get('/profile', [
+        ProfileController::class,
+        'edit'
+    ])->name('profile.edit');
+
+    Route::patch('/profile', [
+        ProfileController::class,
+        'update'
+    ])->name('profile.update');
+
+    Route::delete('/profile', [
+        ProfileController::class,
+        'destroy'
+    ])->name('profile.destroy');
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Pengujian APP_DEBUG
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/uji-error', function () {
+    throw new \RuntimeException('Ini adalah pengujian APP_DEBUG');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Authentication Routes
+|--------------------------------------------------------------------------
+*/
 
 require __DIR__.'/auth.php';
