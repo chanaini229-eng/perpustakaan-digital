@@ -8,8 +8,9 @@
 .git
 .gitignore
 
-# Dependencies frontend
+# Dependencies frontend & backend lokal
 node_modules
+/vendor
 
 # File testing dan development
 tests
