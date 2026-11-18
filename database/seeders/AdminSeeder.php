@@ -31,6 +31,19 @@ class AdminSeeder extends Seeder
             ]
         );
         $siswa->syncRoles(['siswa']);
+        // Tambahkan permission ke role siswa juga (untuk keamanan)
+        $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'siswa']);
+        $role->syncPermissions($permissions);
+        // Tambahkan permission yang diperlukan untuk siswa/anggota
+        $permissions = [
+            'mengajukan peminjaman buku',
+            'melihat status peminjaman sendiri',
+            'melihat riwayat peminjaman sendiri',
+        ];
+        foreach ($permissions as $perm) {
+            \Spatie\Permission\Models\Permission::firstOrCreate(['name' => $perm]);
+            $siswa->syncPermissions($permissions);
+        }
 
         // Ensure siswa has a linked anggota record with required fields
         Anggota::firstOrCreate(
