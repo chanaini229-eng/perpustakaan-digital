@@ -2,81 +2,79 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\Buku;
-use App\Models\Kategori;
 use Illuminate\Http\Request;
 
 class BukuController extends Controller
 {
-    // Menampilkan daftar buku
+    /**
+     * Display a listing of the books.
+     */
     public function index()
     {
-        $bukus = Buku::with('kategori')
-            ->latest()
-            ->get();
-
-        return view('buku.index', compact('bukus'));
+        $books = Buku::all();
+        return view('buku.index', compact('books'));
     }
 
-    // Menampilkan formulir tambah buku
+    /**
+     * Show the form for creating a new book.
+     */
     public function create()
     {
-        $kategoris = Kategori::all();
-
-        return view('buku.create', compact('kategoris'));
+        return view('buku.create');
     }
 
-    // Menyimpan buku baru
+    /**
+     * Store a newly created book in storage.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'kategori_id' => 'required|exists:kategoris,id',
             'judul' => 'required|string|max:255',
             'penulis' => 'required|string|max:255',
-            'tahun_terbit' => 'required|integer|min:1900',
-            'stok' => 'required|integer|min:0',
+            'tahun_terbit' => 'required|integer',
         ]);
-
         Buku::create($validated);
-
-        return redirect()
-            ->route('buku.index')
-            ->with('success', 'Buku berhasil ditambahkan.');
+        return redirect()->route('buku.index')->with('success', 'Buku berhasil ditambahkan');
     }
 
-    // Menampilkan formulir edit buku
+    /**
+     * Display the specified book.
+     */
+    public function show(Buku $buku)
+    {
+        return view('buku.show', compact('buku'));
+    }
+
+    /**
+     * Show the form for editing the specified book.
+     */
     public function edit(Buku $buku)
     {
-        $kategoris = Kategori::all();
-
-        return view('buku.edit', compact('buku', 'kategoris'));
+        return view('buku.edit', compact('buku'));
     }
 
-    // Memperbarui data buku
+    /**
+     * Update the specified book in storage.
+     */
     public function update(Request $request, Buku $buku)
     {
         $validated = $request->validate([
-            'kategori_id' => 'required|exists:kategoris,id',
             'judul' => 'required|string|max:255',
             'penulis' => 'required|string|max:255',
-            'tahun_terbit' => 'required|integer|min:1900',
-            'stok' => 'required|integer|min:0',
+            'tahun_terbit' => 'required|integer',
         ]);
-
         $buku->update($validated);
-
-        return redirect()
-            ->route('buku.index')
-            ->with('success', 'Buku berhasil diperbarui.');
+        return redirect()->route('buku.index')->with('success', 'Buku berhasil diperbarui');
     }
 
-    // Menghapus buku
+    /**
+     * Remove the specified book from storage.
+     */
     public function destroy(Buku $buku)
     {
         $buku->delete();
-
-        return redirect()
-            ->route('buku.index')
-            ->with('success', 'Buku berhasil dihapus.');
+        return redirect()->route('buku.index')->with('success', 'Buku berhasil dihapus');
     }
 }
