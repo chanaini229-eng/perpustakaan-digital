@@ -41,7 +41,13 @@
                             </x-nav-link>
                         @endcan
 
-                        @can('lihat laporan perpustakaan')
+                        <x-nav-link
+    :href="route('admin.status-saya')"
+    :active="request()->routeIs('admin.status-saya')">
+    Status Saya
+</x-nav-link>
+
+                        @endcan
                             <x-nav-link
                                 :href="route('admin.laporan-peminjaman')"
                                 :active="request()->routeIs('admin.laporan-peminjaman')">
@@ -52,6 +58,23 @@
 
                     {{-- Petugas --}}
                     @role('petugas')
+                        <x-nav-link
+                            :href="route('petugas.peminjaman.index')"
+                            :active="request()->routeIs('petugas.peminjaman.*')">
+                            Peminjaman
+                        </x-nav-link>
+                        
+                        <x-nav-link
+                            :href="route('petugas.pengembalian.index')"
+                            :active="request()->routeIs('petugas.pengembalian.*')">
+                            Pengembalian
+                        </x-nav-link>
+                        
+                        <x-nav-link
+                            :href="route('petugas.dashboard')"
+                            :active="request()->routeIs('petugas.dashboard')">
+                            Dashboard Petugas
+                        </x-nav-link>
                         <x-nav-link
                             :href="route('petugas.dashboard')"
                             :active="request()->routeIs('petugas.dashboard')">
@@ -109,7 +132,11 @@
                         </x-nav-link>
                     @endcan
 
-                    @can('melihat status peminjaman sendiri')
+                    <x-nav-link
+    :href="route('admin.status-saya')"
+    :active="request()->routeIs('admin.status-saya')">
+    Status Saya
+</x-nav-link>
                         <x-nav-link
                             :href="route('peminjaman.saya.status')"
                             :active="request()->routeIs('peminjaman.saya.status')">
@@ -231,7 +258,13 @@
                     </x-responsive-nav-link>
                 @endcan
 
-                @can('lihat laporan perpustakaan')
+                <x-nav-link
+    :href="route('admin.status-saya')"
+    :active="request()->routeIs('admin.status-saya')">
+    Status Saya
+</x-nav-link>
+
+                        @endcan
                     <x-responsive-nav-link
                         :href="route('admin.laporan-peminjaman')"
                         :active="request()->routeIs('admin.laporan-peminjaman')">
@@ -242,6 +275,23 @@
 
             {{-- Petugas --}}
             @role('petugas')
+                        <x-nav-link
+                            :href="route('petugas.peminjaman.index')"
+                            :active="request()->routeIs('petugas.peminjaman.*')">
+                            Peminjaman
+                        </x-nav-link>
+                        
+                        <x-nav-link
+                            :href="route('petugas.pengembalian.index')"
+                            :active="request()->routeIs('petugas.pengembalian.*')">
+                            Pengembalian
+                        </x-nav-link>
+                        
+                        <x-nav-link
+                            :href="route('petugas.dashboard')"
+                            :active="request()->routeIs('petugas.dashboard')">
+                            Dashboard Petugas
+                        </x-nav-link>
                 <x-responsive-nav-link
                     :href="route('petugas.dashboard')"
                     :active="request()->routeIs('petugas.dashboard')">
@@ -299,7 +349,11 @@
                 </x-responsive-nav-link>
             @endcan
 
-            @can('melihat status peminjaman sendiri')
+            <x-nav-link
+    :href="route('admin.status-saya')"
+    :active="request()->routeIs('admin.status-saya')">
+    Status Saya
+</x-nav-link>
                 <x-responsive-nav-link
                     :href="route('peminjaman.saya.status')"
                     :active="request()->routeIs('peminjaman.saya.status')">

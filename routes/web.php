@@ -231,6 +231,10 @@ Route::middleware([
         [LaporanPeminjamanController::class, 'index']
     )->name('laporan-peminjaman');
 
+    // Admin view for "Status Saya" – shows all peminjaman records without permission check
+    Route::get('status-saya', [App\Http\Controllers\PeminjamanPribadiController::class, 'status'])
+        ->name('status-saya');
+
 });
 
 /*
