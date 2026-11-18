@@ -13,6 +13,6 @@ class LaporanPeminjamanController extends Controller
             ->latest()
             ->get();
 
-        return view('admin.laporan-peminjaman.index', compact('peminjamans'));
+        return view('admin.laporan-peminjaman', compact('peminjamans'));
     }
 }

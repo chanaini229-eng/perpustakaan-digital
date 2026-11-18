@@ -1,6 +1,14 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+
+use App\Http\Controllers\Auth\LoginController;
+
+// Custom authentication routes (replacing Auth::routes())
+Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('login', [LoginController::class, 'login']);
+Route::post('logout', [LoginController::class, 'logout'])->name('logout');
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -230,10 +238,6 @@ Route::middleware([
         '/laporan-peminjaman',
         [LaporanPeminjamanController::class, 'index']
     )->name('laporan-peminjaman');
-
-    // Admin view for "Status Saya" – shows all peminjaman records without permission check
-    Route::get('status-saya', [App\Http\Controllers\PeminjamanPribadiController::class, 'status'])
-        ->name('status-saya');
 
 });
 

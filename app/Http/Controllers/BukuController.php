@@ -57,7 +57,7 @@ class BukuController extends Controller
     {
         $validated = $request->validate([
             'kategori_id' => 'required|exists:kategoris,id',
-            'judul' => 'required|string|max:255|regex:/^[^\d]+$/u',
+            'judul' => 'required|string|max:255',
             'penulis' => 'required|string|max:255',
             'tahun_terbit' => 'required|integer|min:1900',
             'stok' => 'required|integer|min:0',

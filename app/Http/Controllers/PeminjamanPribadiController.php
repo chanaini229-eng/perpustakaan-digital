@@ -11,10 +11,16 @@ class PeminjamanPribadiController extends Controller
 {
     /**
      * Memastikan akun login terhubung dengan data anggota.
+     * Mengembalikan null jika pengguna adalah admin/petugas tanpa data anggota.
      */
     private function anggotaLogin()
     {
-        $anggota = auth()->user()->anggota;
+        $user = auth()->user();
+        $anggota = $user->anggota;
+
+        if (!$anggota && ($user->hasRole('admin') || $user->hasRole('petugas'))) {
+            return null;
+        }
 
         if (!$anggota) {
             abort(
@@ -52,6 +58,12 @@ class PeminjamanPribadiController extends Controller
     public function store(Request $request)
     {
         $anggota = $this->anggotaLogin();
+
+        if (!$anggota) {
+            return back()->withErrors([
+                'buku_id' => 'Akun admin/petugas tidak dapat mengajukan peminjaman. Gunakan akun siswa.',
+            ]);
+        }
 
         $validated = $request->validate([
             'buku_id' => [
@@ -111,11 +123,18 @@ class PeminjamanPribadiController extends Controller
     {
         $anggota = $this->anggotaLogin();
 
-        $peminjamans = Peminjaman::query()
-            ->with('buku')
-            ->where('anggota_id', $anggota->id)
-            ->latest('id')
-            ->paginate(10);
+        if ($anggota) {
+            $peminjamans = Peminjaman::query()
+                ->with('buku')
+                ->where('anggota_id', $anggota->id)
+                ->latest('id')
+                ->paginate(10);
+        } else {
+            $peminjamans = Peminjaman::query()
+                ->with(['buku', 'anggota'])
+                ->latest('id')
+                ->paginate(10);
+        }
 
         return view(
             'peminjaman.saya.status',
@@ -131,15 +150,20 @@ public function riwayat()
 {
     $anggota = $this->anggotaLogin();
 
-    $peminjamans = Peminjaman::query()
+    $query = Peminjaman::query()
         ->with('buku')
-        ->where('anggota_id', $anggota->id)
         ->where(function ($query) {
             $query->whereNotNull('tanggal_kembali')
                 ->orWhere('status', 'dikembalikan');
-        })
-        ->latest('id')
-        ->paginate(10);
+        });
+
+    if ($anggota) {
+        $query->where('anggota_id', $anggota->id);
+    } else {
+        $query->with('anggota');
+    }
+
+    $peminjamans = $query->latest('id')->paginate(10);
 
     return view('peminjaman.saya.riwayat', compact('peminjamans'));
 }
